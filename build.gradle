@@ -1,5 +1,6 @@
 plugins {
     id 'org.jetbrains.kotlin.jvm' version '2.1.10'
+    id 'org.jetbrains.kotlin.plugin.serialization' version '2.1.10'
 }
 
 group = 'org.example'
@@ -7,9 +8,31 @@ version = '1.0-SNAPSHOT'
 
 repositories {
     mavenCentral()
+    gradlePluginPortal()
+    google()
 }
 
 dependencies {
+    //Fill this in with the version of kotlinx in use in your project
+    def kotlinx_html_version = "0.11.0"
+
+    // include for JVM target
+    implementation("org.jetbrains.kotlinx:kotlinx-html-jvm:${kotlinx_html_version}")
+
+    // include for Common module
+    implementation("org.jetbrains.kotlinx:kotlinx-html:${kotlinx_html_version}")
+
+    testImplementation 'org.jetbrains.kotlin:kotlin-test'
+    implementation('org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0')
+// For parsing HTML
+    implementation("com.mohamedrejeb.ksoup:ksoup-html:0.5.0")
+
+// Only for encoding and decoding HTML entities
+    implementation("com.mohamedrejeb.ksoup:ksoup-entities:0.5.0")
+    implementation 'org.jsoup:jsoup:1.18.3'
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:1.8.0")
+    implementation("edu.stanford.nlp:stanford-corenlp:4.5.8")
+    implementation("edu.stanford.nlp:stanford-corenlp:4.5.8:models")
     testImplementation 'org.jetbrains.kotlin:kotlin-test'
 }
 
