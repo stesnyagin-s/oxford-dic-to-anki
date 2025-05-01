@@ -35,9 +35,7 @@ private const val WORD_STYLE =
 
 fun main() = application {
     Window(
-        onCloseRequest = ::exitApplication,
-        title = "Compose for Desktop",
-        state = rememberWindowState()
+        onCloseRequest = ::exitApplication, title = "Compose for Desktop", state = rememberWindowState()
     ) {
         val count = mutableStateOf(0)
         val link =
@@ -52,21 +50,23 @@ fun main() = application {
                 }) {
                     Text("Calculate")
                 }
-                TextField(label = { Text("Front") },
+                TextField(
+                    label = { Text("Front") },
                     value = cards.value?.frontHtml ?: "",
                     readOnly = true,
                     onValueChange = {},
                     maxLines = 4,
-                    )
-                TextField(label = { Text("Hidden Front") },
-                    value = cards.value?.hidentFrontHtml ?: "",
+                )
+                TextField(
+                    label = { Text("Back") },
+                    value = cards.value?.backHtml ?: "",
                     readOnly = true,
                     onValueChange = {},
                     maxLines = 4,
-
                     )
-                TextField(label = { Text("Back") },
-                    value = cards.value?.backHtml ?: "",
+                TextField(
+                    label = { Text("Hidden Front") },
+                    value = cards.value?.hidentFrontHtml ?: "",
                     readOnly = true,
                     onValueChange = {},
                     maxLines = 4,
@@ -234,14 +234,13 @@ private fun buildSenses(doc: Document, selectedWord: String) =
         check(synonyms.size in 0..1)
         check(grammar.size in 0..1)
         check(cfs.size in 0..1)
-        check(labels.size in 0..1)
 
         val def = sense.select(".def").single().text()
         Sense(
             grammar = grammar.singleOrNull()?.text(),
             cf = cfs.singleOrNull()?.text(),
             def = def,
-            labels = labels.singleOrNull()?.text(),
+            labels = labels.map { it.text() }.filter { it.isNotBlank() }.joinToString(separator = ", "),
             synonym = synonyms.singleOrNull()?.text(),
             hiddenDef = hideWord(word = selectedWord, sentence = def),
             example = sense.select("> ul.examples > li").map { example ->
