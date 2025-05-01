@@ -1,20 +1,23 @@
 plugins {
-    id 'org.jetbrains.kotlin.jvm' version '2.1.10'
-    id 'org.jetbrains.kotlin.plugin.serialization' version '2.1.10'
+    kotlin("jvm") version "2.1.10"
+    id("org.jetbrains.compose") version "1.7.1"
+    id("org.jetbrains.kotlin.plugin.compose") version "2.1.10"
+    id("org.jetbrains.kotlin.plugin.serialization") version "2.1.10"
 }
-
-group = 'org.example'
-version = '1.0-SNAPSHOT'
 
 repositories {
     mavenCentral()
     gradlePluginPortal()
+    maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
     google()
 }
 
 dependencies {
+    implementation(compose.desktop.currentOs)
+
+
     //Fill this in with the version of kotlinx in use in your project
-    def kotlinx_html_version = "0.11.0"
+    val kotlinx_html_version = "0.11.0"
 
     // include for JVM target
     implementation("org.jetbrains.kotlinx:kotlinx-html-jvm:${kotlinx_html_version}")
@@ -22,23 +25,29 @@ dependencies {
     // include for Common module
     implementation("org.jetbrains.kotlinx:kotlinx-html:${kotlinx_html_version}")
 
-    testImplementation 'org.jetbrains.kotlin:kotlin-test'
-    implementation('org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0')
+    testImplementation("org.jetbrains.kotlin:kotlin-test")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
 // For parsing HTML
     implementation("com.mohamedrejeb.ksoup:ksoup-html:0.5.0")
 
 // Only for encoding and decoding HTML entities
     implementation("com.mohamedrejeb.ksoup:ksoup-entities:0.5.0")
-    implementation 'org.jsoup:jsoup:1.18.3'
+    implementation("org.jsoup:jsoup:1.18.3")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:1.8.0")
     implementation("edu.stanford.nlp:stanford-corenlp:4.5.8")
     implementation("edu.stanford.nlp:stanford-corenlp:4.5.8:models")
-    testImplementation 'org.jetbrains.kotlin:kotlin-test'
+    testImplementation("org.jetbrains.kotlin:kotlin-test")
 }
 
-test {
+compose.desktop {
+    application {
+        mainClass = "MainKt"
+    }
+}
+
+tasks.named<Test>("test") {
     useJUnitPlatform()
 }
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(21)
 }

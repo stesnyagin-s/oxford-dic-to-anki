@@ -1,30 +1,84 @@
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material.Button
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Text
+import androidx.compose.material.TextField
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Window
+import androidx.compose.ui.window.application
+import androidx.compose.ui.window.rememberWindowState
 import edu.stanford.nlp.simple.Sentence
 import kotlinx.html.BODY
 import kotlinx.html.a
 import kotlinx.html.b
 import kotlinx.html.body
-import kotlinx.html.br
 import kotlinx.html.div
-import kotlinx.html.h1
-import kotlinx.html.h3
 import kotlinx.html.html
 import kotlinx.html.i
 import kotlinx.html.li
 import kotlinx.html.p
-import kotlinx.html.pre
 import kotlinx.html.span
 import kotlinx.html.stream.createHTML
 import kotlinx.html.ul
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 
-private const val WORD_STYLE = "color:MediumBlue; font-size: 28px; font-weight: 600;text-decoration:none;margin-right: 10px"
+private const val WORD_STYLE =
+    "color:MediumBlue; font-size: 28px; font-weight: 600;text-decoration:none;margin-right: 10px"
 
-fun main() {
+fun main() = application {
+    Window(
+        onCloseRequest = ::exitApplication,
+        title = "Compose for Desktop",
+        state = rememberWindowState()
+    ) {
+        val count = mutableStateOf(0)
+        val link =
+            remember { mutableStateOf("https://www.oxfordlearnersdictionaries.com/definition/english/adversary") }
+        val cards = remember { mutableStateOf<CardsResult?>(null) }
+
+        MaterialTheme {
+            Column(Modifier.fillMaxSize(), Arrangement.spacedBy(5.dp)) {
+                TextField(value = link.value, onValueChange = { link.value = it })
+                Button(modifier = Modifier.align(Alignment.CenterHorizontally), onClick = {
+                    cards.value = anki(url = link.value)
+                }) {
+                    Text("Calculate")
+                }
+                TextField(label = { Text("Front") },
+                    value = cards.value?.frontHtml ?: "",
+                    readOnly = true,
+                    onValueChange = {},
+                    maxLines = 4,
+                    )
+                TextField(label = { Text("Hidden Front") },
+                    value = cards.value?.hidentFrontHtml ?: "",
+                    readOnly = true,
+                    onValueChange = {},
+                    maxLines = 4,
+
+                    )
+                TextField(label = { Text("Back") },
+                    value = cards.value?.backHtml ?: "",
+                    readOnly = true,
+                    onValueChange = {},
+                    maxLines = 4,
+
+                    )
+            }
+        }
+    }
+}
+
+fun anki(url: String): CardsResult {
     val defNumber = 1
-    val url = "https://www.oxfordlearnersdictionaries.com/search/english/?q=detachment"
     val doc: Document = Jsoup.connect(url).get()
     val elements = doc.select("div.webtop > span.phonetics").single().children().map {
         Phonetic(
@@ -46,9 +100,7 @@ fun main() {
     val hiddenFrontHtml = getHiddenFrontHtml(word)
 
     val backHtml = getBackHtml(word = word, defNumber = defNumber, url = url)
-    println(frontHtml)
-    println(backHtml)
-    println(hiddenFrontHtml)
+    return CardsResult(frontHtml = frontHtml, hidentFrontHtml = hiddenFrontHtml, backHtml = backHtml)
 }
 
 private fun getFrontHtml(word: Word) = createHTML().html {
@@ -94,9 +146,9 @@ private fun getBackHtml(word: Word, defNumber: Int, url: String) = createHTML().
             word.phonetics.forEach {
                 li {
                     div {
-                        attributes["style"]="display: grid; grid-template-columns: 1fr 2fr;"
+                        attributes["style"] = "display: grid; grid-template-columns: 1fr 2fr;"
                         span {
-                            attributes["style"]="font-weight: 600"
+                            attributes["style"] = "font-weight: 600"
                             text(it.country)
                         }
                         span {
@@ -114,7 +166,7 @@ private fun getBackHtml(word: Word, defNumber: Int, url: String) = createHTML().
             }
         }
         span {
-            attributes["style"]="font-weight: 600"
+            attributes["style"] = "font-weight: 600"
             text("$defNumber. ${selectChosenDef(word).cf?.plus(" ") ?: ""}")
             span {
                 attributes["style"] = "color:grey;"
@@ -162,7 +214,7 @@ private fun getHiddenFrontHtml(word: Word) = createHTML().html {
         ul {
             selectChosenDef(word).example.forEach {
                 li {
-                    i{text(it.hiddenText)}
+                    i { text(it.hiddenText) }
                 }
             }
         }
@@ -174,7 +226,7 @@ fun selectChosenDef(word: Word): Sense {
 }
 
 private fun buildSenses(doc: Document, selectedWord: String) =
-    doc.select("ol.senses_multiple > li.sense, ol.sense_single > li.sense").map { sense ->
+    doc.select("ol.senses_multiple li.sense, ol.sense_single > li.sense").map { sense ->
         val grammar = sense.select(".grammar")
         val synonyms = sense.select(".xrefs[xt=\"syn\"]")
         val cfs = sense.select("> .cf")
@@ -185,7 +237,8 @@ private fun buildSenses(doc: Document, selectedWord: String) =
         check(labels.size in 0..1)
 
         val def = sense.select(".def").single().text()
-        Sense(grammar = grammar.singleOrNull()?.text(),
+        Sense(
+            grammar = grammar.singleOrNull()?.text(),
             cf = cfs.singleOrNull()?.text(),
             def = def,
             labels = labels.singleOrNull()?.text(),
@@ -206,7 +259,7 @@ private fun buildSenses(doc: Document, selectedWord: String) =
 fun hideWord(word: String, sentence: String): String {
     val wordLemma = Sentence(word).lemma(0)
     var hiddenSentence = sentence
-    val wordsToFilter = Sentence(sentence).words().filter { Sentence(it).lemma(0) == wordLemma }
+    Sentence(sentence).words().filter { Sentence(it).lemma(0) == wordLemma }
         .forEach { hiddenSentence = hiddenSentence.replace(it, "____") }
     return hiddenSentence
 }
@@ -236,8 +289,10 @@ data class Sense(
     val grammar: String?,
     val labels: String?,
     val example: List<Example>,
-    val synonym: String?
+    val synonym: String?,
 )
 
 @Serializable
 data class Example(val cf: String?, val text: String, val hiddenText: String)
+
+data class CardsResult(val frontHtml: String, val hidentFrontHtml: String, val backHtml: String)
